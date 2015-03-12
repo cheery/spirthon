@@ -6,5 +6,5 @@ Requirements for the project:
  * It should be simple to use as a library.
  * The source programs should run in python just fine.
  * If translation turns out to be slow, the SPIR-V files need to be cached.
- * Allow composition of shaders proving a function entry point, as long as the code is restricted to fit the gpu programming model.
+ * Allow composition of shaders by providing a function entry point, as long as the code is restricted to fit the gpu programming model.
  * Provide just enough vector arithmetic as a library shim, preferably compatible to be passed into vulkan API.
