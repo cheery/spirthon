@@ -39,6 +39,26 @@
             "WaitWaitWorgGroup": 2, 
             "WaitKernel": 1
         }, 
+        "MemorySemantics": {
+            "AtomicCounter": 256, 
+            "Count": 10, 
+            "Image": 512, 
+            "Relaxed": 1, 
+            "Acquire": 4, 
+            "AllMemory": 1023, 
+            "Uniform": 16, 
+            "WorkgroupGlobal": 128, 
+            "Release": 8, 
+            "WorkgroupLocal": 64, 
+            "SequentiallyConsistent": 2, 
+            "Subgroup": 32
+        }, 
+        "SelectionControl": {
+            "DontFlatten": 2, 
+            "Count": 3, 
+            "None": 0, 
+            "Flatten": 1
+        }, 
         "FPFastMath": {
             "Last": 17, 
             "NNan": 0, 
@@ -71,12 +91,6 @@
             "None": 0, 
             "Unroll": 1, 
             "DontUnroll": 2
-        }, 
-        "SelectControl": {
-            "DontFlatten": 2, 
-            "Count": 3, 
-            "None": 0, 
-            "Flatten": 1
         }, 
         "BuiltIn": {
             "VertexId": 5, 
@@ -157,20 +171,6 @@
             "Const": 8, 
             "Pure": 4, 
             "Inline": 1
-        }, 
-        "MemorySemanticsMask": {
-            "AtomicCounter": 256, 
-            "Count": 10, 
-            "Image": 512, 
-            "Relaxed": 1, 
-            "Acquire": 4, 
-            "AllMemory": 1023, 
-            "Uniform": 16, 
-            "WorkgroupGlobal": 128, 
-            "Release": 8, 
-            "WorkgroupLocal": 64, 
-            "SequentiallyConsistent": 2, 
-            "Subgroup": 32
         }, 
         "GroupOperation": {
             "InclusiveScan": 1, 
@@ -317,7 +317,7 @@
             "opcode": 1, 
             "result": false, 
             "operands": [
-                "Source", 
+                "SourceLanguage", 
                 "LiteralNumber"
             ], 
             "name": "OpSource"
@@ -354,8 +354,8 @@
             "opcode": 5, 
             "result": false, 
             "operands": [
-                "Addressing", 
-                "Memory"
+                "AddressingModel", 
+                "MemoryModel"
             ], 
             "name": "OpMemoryModel"
         }, 
@@ -497,7 +497,7 @@
             "opcode": 20, 
             "result": true, 
             "operands": [
-                "Storage", 
+                "StorageClass", 
                 "Id"
             ], 
             "name": "OpTypePointer"
@@ -644,7 +644,7 @@
             "opcode": 38, 
             "result": true, 
             "operands": [
-                "Storage", 
+                "StorageClass", 
                 "OptionalId"
             ], 
             "name": "OpVariable"
@@ -654,7 +654,7 @@
             "opcode": 39, 
             "result": true, 
             "operands": [
-                "Storage", 
+                "StorageClass", 
                 "Id"
             ], 
             "name": "OpVariableArray"
@@ -664,7 +664,7 @@
             "opcode": 40, 
             "result": true, 
             "operands": [
-                "Function", 
+                "FunctionControlMask", 
                 "Id"
             ], 
             "name": "OpFunction"
@@ -2339,7 +2339,7 @@
             "result": false, 
             "operands": [
                 "Id", 
-                "Loop"
+                "LoopControl"
             ], 
             "name": "OpLoopMerge"
         }, 
@@ -2349,7 +2349,7 @@
             "result": false, 
             "operands": [
                 "Id", 
-                "Select"
+                "SelectionControl"
             ], 
             "name": "OpSelectionMerge"
         }, 
@@ -2601,7 +2601,7 @@
             "result": true, 
             "operands": [
                 "Id", 
-                "Storage"
+                "StorageClass"
             ], 
             "name": "OpGenericCastToPtrExplicit"
         }, 

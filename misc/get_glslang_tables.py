@@ -22,11 +22,26 @@ for name, res, typ in re.findall(r"InstructionDesc\[(.+)\].*setResultAndType\((t
     has_result[name] = {'true':True, 'false':False}[res]
     has_type[name] = {'true':True, 'false':False}[typ]
 
+# Some of the constant operands do not match with the constants table.
+renamed_operands = {
+    'Source': 'SourceLanguage',
+    'Addressing': 'AddressingModel',
+    'Memory': 'MemoryModel',
+    'Storage': 'StorageClass',
+    'Loop': 'LoopControl',
+    'Select': 'SelectionControl',
+    'Function': 'FunctionControlMask',
+}
+renamed_constant_tables = {
+    'MemorySemanticsMask': 'MemorySemantics',
+    'SelectControl': 'SelectionControl',
+}
+
 operands = defaultdict(list)
 for name, operand in re.findall(r"InstructionDesc\[(.+)\].*operands\.push\((.*)\);", doc_src):
     if operand.startswith('Operand'):      # Everything starts with an Operand
         operand = operand[len('Operand'):] # But it's not in the specification so lets clean it out.
-    operands[name].append(operand)
+    operands[name].append(renamed_operands.get(operand, operand))
 
 # Prefixes do not appear in the spec either, so I clear them out too.
 prefixes = (
@@ -51,7 +66,7 @@ for name, body in re.findall(r"enum\W(\w+)\W\{(.*?)\}", spirv_src, re.DOTALL):
     if name == 'OpCode': # Merge the opcode constants with instruction table.
         opcodes = table
     else:
-        constants[name] = table
+        constants[renamed_constant_tables.get(name, name)] = table
 
 # Finally lets put everything together for easy consumption and pretty-print it out.
 instructions = []

@@ -16,3 +16,9 @@ I got to extract the specification from the glslang source files. Left in `misc/
 I hope there will be a good machine-readable specification of SPIR-V, possibly in various format everyone will use instead of copy/paste programming names and formatting from the specification.
 
 An idea came out after writing on. The HTML in the registry is so well structured that the tables could be directly recovered from the documents describing them. This would verify they are never out of sync.
+
+There seem to be some differences in variable names between glslang and what SPIR-V specification specifies. I had to rewrite some names to get them match with each other.
+
+I hope the result type and id fields are correct. They denote when an instruction returns a value. Somewhat useful detail for anything that processes the code.
+
+Additionally I wonder what to do with fields that allow masking on themselves. Maybe they need to be specified separately in the generator..
