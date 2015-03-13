@@ -6,7 +6,7 @@ This might come out as something, or then not. It would be a shame to not try.
 
 ## Status
 
-I'm looking for SPIR-V tables to generate myself an instruction encoder/decoder. Preferably in .json -format. If I don't find any, I will run regexes into the glslang source code.
+Ran regexes into the glslang source code to retrieve myself a machine readable specification. It went quite well. Now I need to write a decoder and an encoder.
 
 [Development log](DEV.md)
 

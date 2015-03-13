@@ -9,7 +9,8 @@ magic_um = 0x03022307
 # Loads the file in module's directory
 basepath = os.path.dirname(__file__)
 with open(os.path.join(basepath,'spirv.json')) as fd:
-    op_table = json.load(fd)
+    op_table = json.load(fd)['instructions']
+    print op_table
 
 if __name__=='__main__':
     dat = array('I', open(sys.argv[1], 'rb').read())
@@ -30,6 +31,7 @@ if __name__=='__main__':
         length = dat[start] >> 16
         assert length != 0
         if op < len(op_table):
+            assert op_table[op]['opcode'] == op # Assuming the tables file is sorted.
             print op_table[op]['name'], dat[start+1:start+length]
         else:
             print op, map(hex, dat[start+1:start+length])

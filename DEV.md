@@ -8,3 +8,9 @@ Requirements for the project:
  * If translation turns out to be slow, the SPIR-V files need to be cached.
  * Allow composition of shaders by providing a function entry point, as long as the code is restricted to fit the gpu programming model.
  * Provide just enough vector arithmetic as a library shim, preferably compatible to be passed into vulkan API.
+
+## Extracting Machine Readable Tables
+
+I got to extract the specification from the glslang source files. Left in `misc/get_glslang_tables.py` as an additional documentation. I'm not updating this file, but in case I need to do it again I'll use the tool to do it.
+
+I hope there will be a good machine-readable specification of SPIR-V, possibly in various format everyone will use instead of copy/paste programming names and formatting from the specification.
