@@ -1,4 +1,14 @@
 {
+    "masks": {
+        "FunctionControlMask": {
+            "Count": 4, 
+            "None": 0, 
+            "DontInline": 2, 
+            "Const": 8, 
+            "Pure": 4, 
+            "Inline": 1
+        }
+    }, 
     "constants": {
         "SamplerFilterMode": {
             "Nearest": 16, 
@@ -163,14 +173,6 @@
             "Count": 2, 
             "Aligned": 2, 
             "Volatile": 1
-        }, 
-        "FunctionControlMask": {
-            "Count": 4, 
-            "None": 0, 
-            "DontInline": 2, 
-            "Const": 8, 
-            "Pure": 4, 
-            "Inline": 1
         }, 
         "GroupOperation": {
             "InclusiveScan": 1, 

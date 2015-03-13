@@ -24,7 +24,7 @@ for instruction in op_table:
         if operand not in ['LiteralNumber', 'LiteralString',
                 'Id', 'VariableLiterals', 'VariableIds',
                 'OptionalId', 'VariableLiteralId']:
-            assert operand in const_table, (operand, instruction)
+            assert (operand in const_table or operand in mask_table), (operand, instruction)
 
 # Literal string parsing, as it appears in the SPIR-V specification
 def literal_string(it):
@@ -83,7 +83,7 @@ if __name__=='__main__':
                     flag = it.next()
                     mask = set()
                     cover = 0
-                    for name, value in const_table[operand].items():
+                    for name, value in mask_table[operand].items():
                         if flag & value != 0:
                             mask.add(name)
                             cover |= value

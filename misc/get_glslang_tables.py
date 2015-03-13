@@ -36,6 +36,7 @@ renamed_constant_tables = {
     'MemorySemanticsMask': 'MemorySemantics',
     'SelectControl': 'SelectionControl',
 }
+masked_constants = {'FunctionControlMask'}
 
 operands = defaultdict(list)
 for name, operand in re.findall(r"InstructionDesc\[(.+)\].*operands\.push\((.*)\);", doc_src):
@@ -52,6 +53,7 @@ prefixes = (
 
 # In the SPIRV/spirv.h there are several useful constants and flags used by the engine.
 constants = {}
+masks = {}
 for name, body in re.findall(r"enum\W(\w+)\W\{(.*?)\}", spirv_src, re.DOTALL):
     table = {}
     index = 0
@@ -66,7 +68,11 @@ for name, body in re.findall(r"enum\W(\w+)\W\{(.*?)\}", spirv_src, re.DOTALL):
     if name == 'OpCode': # Merge the opcode constants with instruction table.
         opcodes = table
     else:
-        constants[renamed_constant_tables.get(name, name)] = table
+        name = renamed_constant_tables.get(name, name)
+        if name in masked_constants:
+            masks[name] = table
+        else:
+            constants[name] = table
 
 # Finally lets put everything together for easy consumption and pretty-print it out.
 instructions = []
@@ -79,5 +85,5 @@ for name in sorted(opcodes, key=lambda x: opcodes[x]):
         operands = operands.get(name, []),
     )
     instructions.append(record)
-specification = dict(instructions=instructions, constants=constants)
+specification = dict(instructions=instructions, constants=constants, masks=masks)
 print json.dumps(specification, indent=4)

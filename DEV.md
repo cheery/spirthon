@@ -21,4 +21,4 @@ There seem to be some differences in variable names between glslang and what SPI
 
 I hope the result type and id fields are correct. They denote when an instruction returns a value. Somewhat useful detail for anything that processes the code.
 
-Additionally I wonder what to do with fields that allow masking on themselves. Maybe they need to be specified separately in the generator..
+Additionally I wonder what to do with fields that allow masking on themselves. Maybe they need to be specified separately in the generator. Added FunctionControlMask to masks. I'll see how it goes.
