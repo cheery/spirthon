@@ -22,3 +22,12 @@ There seem to be some differences in variable names between glslang and what SPI
 I hope the result type and id fields are correct. They denote when an instruction returns a value. Somewhat useful detail for anything that processes the code.
 
 Additionally I wonder what to do with fields that allow masking on themselves. Maybe they need to be specified separately in the generator. Added FunctionControlMask to masks. I'll see how it goes.
+## Decoding & Encoding
+
+There's the question what to do when you see a bad instruction. It could be the decoding is used to just analyse the source code, so it may make sense to just pass the bad instructions through. I put the traceback message into the unknown instruction, so it gives a cue if the decoding actually failed.
+
+SPIR-V seems to be slightly easier to encode than it is to decode. There's not big difference in that though. If I improved my decoder a bit, it might become about as simple as my decoder.
+
+I like the SPIR-V string encoding/decoding a lot. It's simpler than I had thought it would be after reading the spec.
+
+It seems that my encoder and decoder works now. The decoder manages to decode all instructions in my sample files. I used the decoder to check that the encoder works too.

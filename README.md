@@ -6,7 +6,7 @@ This might come out as something, or then not. It would be a shame to not try.
 
 ## Status
 
-Ran regexes into the glslang source code to retrieve myself a machine readable specification. It went quite well. Now I need to write a decoder and an encoder.
+Made an instruction decoder and encoder that work from the specification I generated from glslang earlier. Now I need to adjust my translator prototype to use SPIR-V instructions.
 
 [Development log](DEV.md)
 
