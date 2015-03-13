@@ -14,3 +14,5 @@ Requirements for the project:
 I got to extract the specification from the glslang source files. Left in `misc/get_glslang_tables.py` as an additional documentation. I'm not updating this file, but in case I need to do it again I'll use the tool to do it.
 
 I hope there will be a good machine-readable specification of SPIR-V, possibly in various format everyone will use instead of copy/paste programming names and formatting from the specification.
+
+An idea came out after writing on. The HTML in the registry is so well structured that the tables could be directly recovered from the documents describing them. This would verify they are never out of sync.
