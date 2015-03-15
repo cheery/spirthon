@@ -74,3 +74,7 @@ For annotation, every value is first assigned "Unbound" -annotation, which means
 At this point it's may be good to introduce an idea of a translation unit, which memoizes and triggers translation of things inserted into the unit. The contents of the translation unit will be dumped into SPIR-V on success.
 
 Before the annotation phase gets to run, it may make sense to translate the whole function block first, so we can do some flow analysis and insert the phi nodes. This way we don't discourage variable name reuse when it makes sense.
+
+## The Annotator
+
+I am not entirely aware of which rules the annotator should use in its fixed point computation. I'm sure I will figure out something next week. It looks like that annotators work would become easier if I eliminate the variables and assignments early.

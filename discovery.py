@@ -1,6 +1,21 @@
 from dis import findlabels
+import annotator
 import opcode
 # The discovery -stage of the translator, and the objects it generates.
+
+class Function(object):
+    def __init__(self, annotation, func, entry):
+        self.annotation = annotation
+        self.func = func
+        self.entry = entry
+
+    def __iter__(self): # hack so we won't have to change annotator later for multiple blocks.
+        yield self.entry
+
+class Block(object):
+    def __init__(self, ops):
+        self.ops = ops
+
 # During the translation process, all these operations will be
 # substituted by SPIR-V instructions.
 
@@ -30,15 +45,26 @@ class Operation(object):
         self.org = org
         self.name = name
         self.args = args
+        self.annotation = annotator.unbound
+        self.use = set()
+        for arg in self.args:
+            if isinstance(arg, Operation):
+                arg.use.add(self)
+        self.queued = False # True if in annotator's queue.
     # Makes the representation in printouts a little bit cleaner.
     def __str__(self): 
         return "<Op {} {}>".format(self.name, ' '.join(map(str, self.args)))
 
     def __repr__(self):
         return "<Op {}>".format(self.name)
+
+def build(annotation, func):
+    entry = Block(list(interpret(func)))
+    return Function(annotation, func, entry)
+
 # This isn't final form of this function. I should later pass it pc,
 # stack, vartab, labels as arguments. It should produce basic blocks
-# to me. Also this function should memoize the basic block will generate
+# to me. Also this function should memoize the basic block it will generate
 def interpret(func):
     #func.func_globals
     co_argcount = func.func_code.co_argcount
