@@ -21,11 +21,14 @@ def third_program(a, b):
 if __name__=='__main__':
     t_func = FuncType(t_int, [t_int, t_int])
     unit = translate.TranslationUnit()
-    unit.build_function(t_func, third_program)
+    fn = unit.build_function(t_func, third_program)
+    for op in fn.entry.ops:
+        print op
     unit.annotator.run()
     instructions = unit.translate()
     for instruction in instructions:
         print instruction
+
 
 # get it produce:
     from spirv import Instruction, Id

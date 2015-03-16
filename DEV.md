@@ -78,3 +78,13 @@ Before the annotation phase gets to run, it may make sense to translate the whol
 ## The Annotator
 
 I am not entirely aware of which rules the annotator should use in its fixed point computation. I'm sure I will figure out something next week. It looks like that annotators work would become easier if I eliminate the variables and assignments early.
+
+Sleeping over it, I figured the annotator mostly cannot work backwards in the flow graph because the python operations and calls depend on the arguments passed into them.
+
+## SSA Construction
+
+I coded abstract interpreter to emit assignment operations, but realised it doesn't need to do that. It's enough to mark into the block which variables it defined.
+
+If it turns out that python holds stack values on branching, it'll be necessary to insert Local -objects for every stack value that passes a block boundary. Refrain implementing that until it's needed.
+
+Once there's an interest to provide loops and conditionals phi-nodes need to be inserted. When doing that, remember the block.defines may contain Local -objects.

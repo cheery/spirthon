@@ -13,11 +13,21 @@ class Function(object):
         yield self.entry
 
 class Block(object):
-    def __init__(self, ops):
+    def __init__(self, ops, depends, defines):
         self.ops = ops
+        self.depends = depends
+        self.defines = defines
 
 # During the translation process, all these operations will be
 # substituted by SPIR-V instructions.
+
+class Argument(object):
+    def __init__(self, func, index):
+        self.func = func # refers to Function -object above.
+        self.index = index
+
+    def __repr__(self):
+        return "<Argument {}>".format(self.index)
 
 # If I consider the upscope of every function be fixed down, this object
 # may be substituted away early. Though it can be used to generate stack
@@ -59,27 +69,35 @@ class Operation(object):
         return "<Op {}>".format(self.name)
 
 def build(annotation, func):
-    entry = Block(list(interpret(func)))
-    return Function(annotation, func, entry)
+    co_varnames = func.func_code.co_varnames
+    vartab = [Local(vn) for vn in co_varnames] 
+    entry = Block([], set(), {})
+    fn = Function(annotation, func, entry)
+    for i in range(func.func_code.co_argcount):
+        entry.defines[vartab[i]] = Argument(fn, i)
+    for op in interpret(func, entry, vartab):
+        for arg in op.args:
+            if isinstance(arg, Local):
+                entry.depends.add(arg)
+        entry.ops.append(op)
+    return fn
 
 # This isn't final form of this function. I should later pass it pc,
 # stack, vartab, labels as arguments. It should produce basic blocks
 # to me. Also this function should memoize the basic block it will generate
-def interpret(func):
+def interpret(func, block, vartab):
     #func.func_globals
-    co_argcount = func.func_code.co_argcount
     co_code = func.func_code.co_code
     co_consts = func.func_code.co_consts
     co_names = func.func_code.co_names
-    co_varnames = func.func_code.co_varnames
     pc = 0
     stack = []
-    vartab = [Local(vn) for vn in co_varnames] 
     labels = set(findlabels(co_code))
     while pc < len(co_code):
         org = pc
         if org in labels:
-            yield Operation(func, org, 'fallthrough', [stack])
+            yield Operation(func, org, 'fallthrough', [stack, pc])
+            break
         op, arg, pc = step(co_code, pc)
         name = opcode.opname[op]
         if name == 'CALL_FUNCTION':
@@ -96,7 +114,7 @@ def interpret(func):
         elif name == 'LOAD_CONST':
             stack.append(co_consts[arg])
         elif name == 'LOAD_FAST':
-            stack.append(vartab[arg])
+            stack.append(block.defines.get(vartab[arg], vartab[arg]))
         elif name == 'LOAD_GLOBAL':
             stack.append(Global(func, org, co_names[arg]))
         elif name == 'POP_TOP':
@@ -110,7 +128,7 @@ def interpret(func):
             val = stack.pop()
             yield Operation(func, org, "setattr", [obj, co_names[arg], val])
         elif name == 'STORE_FAST':
-            yield Operation(func, org, "assign", [co_varnames[arg], stack.pop()])
+            block.defines[vartab[arg]] = stack.pop()
         elif name in binary_opcodes:
             fn = binary_opcodes[name]
             rhs = stack.pop()
