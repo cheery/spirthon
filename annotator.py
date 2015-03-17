@@ -15,6 +15,18 @@ class Annotator(object):
     def run(self):
         while len(self.stack) > 0:
             op = self.stack.pop()
+            op.queued = False
+            if op.name == 'call':
+                print 'annotate', op
+            elif op.name == 'return':
+                a = union(op.block.func.annotation.restype, op.args[0].annotation)
+                op.args[0].annotation = a
+                op.block.func.annotation.restype = a
+                op.annotation = a
+                print 'return update', op, a
+                # bit incorrect, should push uses of argument in too.
+            else:
+                assert False
             # Should annotate here, if some of the fields change,
             # should reschedule the used fields.
 
@@ -37,10 +49,6 @@ class Constant(object):
 
     def __repr__(self):
         return 'Constant({}, {})'.format(self.type, self.value)
-
-class Unbound(object):
-    def __repr__(self):
-        return 'unbound'
 
 class FuncType(object):
     def __init__(self, restype, argtypes):
@@ -80,7 +88,6 @@ class Parametric(object):
 
 # Types are treated as notation. They should be uniquely identified.
 anything = Anything()
-unbound = Unbound()
 
 # not sure whether these belong here.
 t_int = Type('int', anything)
@@ -111,9 +118,9 @@ def union(a, b):
 def union_raw(a, b):
     if a is b:
         return a
-    if a is unbound:
+    if a is None:
         return b
-    if b is unbound:
+    if b is None:
         return a
     if isinstance(a, Constant) and isinstance(b, Constant):
         if a.value == b.value:

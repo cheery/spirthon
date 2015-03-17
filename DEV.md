@@ -88,3 +88,15 @@ I coded abstract interpreter to emit assignment operations, but realised it does
 If it turns out that python holds stack values on branching, it'll be necessary to insert Local -objects for every stack value that passes a block boundary. Refrain implementing that until it's needed.
 
 Once there's an interest to provide loops and conditionals phi-nodes need to be inserted. When doing that, remember the block.defines may contain Local -objects.
+
+## Minor adjustments
+
+Replaced `annotator.unbound` with `None` to remove the discovery stages dependence on the annotation stage. Also had to add backwards links from operations to basic blocks, from basic blocks to function blocks.
+
+'Improvement' of an annotation should trigger a reaction. Additionally some of them, such as the argument annotation should act on the function block.
+
+Normal functions should be fetched and retrieved when annotator hits them. They should cause flowback back to their callees.
+
+Binary operations should wait until they have their arguments, then annotate using the rules defined for them. It seems we have to define an environment of some kind.
+
+The environment brings up an one question. Optimally every spirthon program would be a python program too. But some OpenCL or GLSL functions are dependent on thread state. I haven't heard python would have dynamic scope for this kind of things.

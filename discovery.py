@@ -1,5 +1,4 @@
 from dis import findlabels
-import annotator
 import opcode
 # The discovery -stage of the translator, and the objects it generates.
 
@@ -8,12 +7,14 @@ class Function(object):
         self.annotation = annotation
         self.func = func
         self.entry = entry
+        entry.func = self
 
     def __iter__(self): # hack so we won't have to change annotator later for multiple blocks.
         yield self.entry
 
 class Block(object):
     def __init__(self, ops, depends, defines):
+        self.func = None
         self.ops = ops
         self.depends = depends
         self.defines = defines
@@ -55,11 +56,12 @@ class Operation(object):
         self.org = org
         self.name = name
         self.args = args
-        self.annotation = annotator.unbound
+        self.annotation = None
         self.use = set()
         for arg in self.args:
             if isinstance(arg, Operation):
                 arg.use.add(self)
+        self.block = None
         self.queued = False # True if in annotator's queue.
     # Makes the representation in printouts a little bit cleaner.
     def __str__(self): 
@@ -80,6 +82,7 @@ def build(annotation, func):
             if isinstance(arg, Local):
                 entry.depends.add(arg)
         entry.ops.append(op)
+        op.block = entry
     return fn
 
 # This isn't final form of this function. I should later pass it pc,
@@ -133,7 +136,7 @@ def interpret(func, block, vartab):
             fn = binary_opcodes[name]
             rhs = stack.pop()
             lhs = stack.pop()
-            operation = Operation(func, org, fn, [lhs, rhs])
+            operation = Operation(func, org, 'call', [fn, lhs, rhs])
             yield operation
             stack.append(operation)
         else:
@@ -179,11 +182,18 @@ def step(co_code, pc):
         pc += 1
     return op, arg, pc
 
+class Binop(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return self.name
+
 binary_opcodes = {
-    'BINARY_MULTIPLY': 'mul',
-    'BINARY_ADD': 'add',
-    'BINARY_SUB': 'sub',
-    'BINARY_MODULO': 'mod',
+    'BINARY_MULTIPLY': Binop('mul'),
+    'BINARY_ADD': Binop('add'),
+    'BINARY_SUB': Binop('sub'),
+    'BINARY_MODULO': Binop('mod'),
 }
 
 error_template = """Operation not accepted by the target language.
