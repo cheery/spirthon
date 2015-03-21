@@ -4,14 +4,15 @@ import discovery
 class TranslationUnit(object):
     def __init__(self):
         self.annotator = annotator.Annotator(self)
-        self.functions = {}
+        self.procedures = {}
 
     def build_function(self, functype, func):
-        if func not in self.functions:
-            self.functions[func] = f = discovery.build(functype, func)
-            self.annotator.update(f)
-            return f
-        return self.functions[func]
+        if func not in self.procedures:
+            self.procedures[func] = proc = discovery.read(func)
+            proc.annotation = functype
+            self.annotator.update(proc)
+            return proc
+        return self.procedures[proc]
 
     def translate(self):
         # should translate the program, or crash.

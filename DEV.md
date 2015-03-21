@@ -100,3 +100,9 @@ Normal functions should be fetched and retrieved when annotator hits them. They 
 Binary operations should wait until they have their arguments, then annotate using the rules defined for them. It seems we have to define an environment of some kind.
 
 The environment brings up an one question. Optimally every spirthon program would be a python program too. But some OpenCL or GLSL functions are dependent on thread state. I haven't heard python would have dynamic scope for this kind of things.
+
+## Complete SSA conversion
+
+I realised if not trying to solve the problem now then solving it later could become unnecessarily hard. Also it's one of the fun problems in the project.
+
+The annotator needs to annotate constants too, so I put it to generate const -instructions for LOAD_CONST. It seems to neatly match the SPIR-V as well.
