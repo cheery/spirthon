@@ -7,6 +7,14 @@ def hello(x, y, z):
             z = 20
         elif True:
             pass
-    return y
+    return z
+
+def hello2(x, a, b):
+    if a:
+        x = 3
+        if b:
+            pass
+        x = 10
+    return x
 
 print discovery.read(hello)

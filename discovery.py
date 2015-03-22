@@ -1,5 +1,6 @@
 from collections import namedtuple
 from dis import findlabels
+import itertools
 import opcode
 
 # Discovery -stage converts functions into SSA -form.
@@ -7,6 +8,7 @@ class Procedure(object):
     def __init__(self, func):
         self.blocks = []
         self.func = func
+        self.counter = itertools.count(1) # helps at finding out errors from this code.
 
     def __str__(self):
         return "Procedure {}\n{}".format(
@@ -24,7 +26,7 @@ class Argument(object):
         self.index = index
 
     def __repr__(self):
-        return "(Argument {})".format(self.index)
+        return "Arg{}".format(self.index)
 
 class Block(object):
     def __init__(self, proc):
@@ -36,15 +38,16 @@ class Block(object):
         self.succ = []
         self.idom = None
         self.phi = {}
+        self.frontiers = set()
 
     def __str__(self):
         return "{:3}: {}{}".format(
             self.index,
-            '\n     '.join(map(str, self.instructions)),
+            '\n     '.join(map(str, self.phi.values() + self.instructions)),
             ''.join('\n     {} <- {}'.format(n, v) for n, v in self.defines.items()))
 
     def __repr__(self):
-        return "(Block {})".format(self.index)
+        return "L{}".format(self.index)
 
     @property
     def index(self):
@@ -61,13 +64,14 @@ class Instruction(object):
             if isinstance(arg, Block):
                 block.succ.append(arg)
                 arg.prec.append(block)
+        self.result_id = block.proc.counter.next()
 
     # Makes the representation in printouts a little bit cleaner.
     def __str__(self): 
-        return "(Op {} {})".format(self.name, ' '.join(map(repr, self.args)))
+        return "i{} = (Op {} {})".format(self.result_id, self.name, ' '.join(map(repr, self.args)))
 
     def __repr__(self):
-        return "(Op {})".format(self.name)
+        return "i{}".format(self.result_id)
 
 # If I consider the upscope of every function be fixed down, this object
 # may be substituted away early. Though it can be used to generate stack
@@ -85,12 +89,13 @@ class Phi(object):
     def __init__(self, block, args):
         self.block = block
         self.args = args
+        self.result_id = block.proc.counter.next()
 
     def __str__(self):
-        return "(Phi {})".format(self.args)
+        return "p{} = (Phi {})".format(self.result_id, self.args)
 
     def __repr__(self):
-        return "(Phi)"
+        return "p{}".format(self.result_id)
 
 # Locals are eliminated and substituted by phi -nodes and
 # assignment results in ssa_conversion
@@ -112,6 +117,8 @@ def read(func):
         labels = findlabels(func.func_code.co_code),
         variables = [Local(n) for n in func.func_code.co_varnames])
     entry = interpret(proc, 0, [], tables)
+    assert len(entry.prec) == 0 # If this assertion fails, then code in the
+                                # interpret() for Arguments need to be fixed.
     ssa_conversion(proc)
     return proc
 
@@ -126,6 +133,9 @@ def interpret(proc, pc, cont, tables):
     co_code = func_code.co_code
     co_consts = func_code.co_consts
     co_names = func_code.co_names
+    # If something branches into the entry node, it might cause phi -nodes
+    # to be generated on arguments. The way to define arguments like this
+    # will produce errors for such programs.
     if block.index == 0:
         for i in range(func_code.co_argcount):
             block.defines[tables.variables[i]] = Argument(proc, i)
@@ -275,17 +285,20 @@ def ssa_conversion(proc):
                 block.depends.difference_update(block.defines)
             if len(block.depends) > L:
                 adjust = True
-    # Next we recognize dominance frontiers, but instead of storing
-    # them, lets just insert phi-nodes to where there's dependence
-    # on a value.
+    # Next we recognize dominance frontiers. We cannot insert
+    # phi -nodes here, because phi-nodes themselves are definitions.
     for block in proc.blocks:
         if len(block.prec) >= 2:
             for prec in block.prec:
                 runner = prec
                 while runner != block.idom:
-                    for variable, value in runner.defines.items():
-                        insert_phi(block, variable, prec, value)
+                    runner.frontiers.add(block)
                     runner = runner.idom
+    # Now it's time to insert the phi-nodes.
+    for block in proc.blocks:
+        for frontier in block.frontiers:
+            for variable in block.defines:
+                insert_phi(frontier, variable)
     # Next fill in the dominating flow into the phi-nodes and
     # substitute every Local with it's lookup value.
     # These operations are independent, so they can be done
@@ -293,19 +306,20 @@ def ssa_conversion(proc):
     for block in proc.blocks:
         for prec in block.prec:
             for variable, phi in block.phi.items():
-                if prec not in phi.args:
-                    phi.args[prec] = lookup(prec, variable)
+                phi.args[prec] = lookup(prec, variable)
         for instruction in block.instructions:
             for i, arg in enumerate(instruction.args):
                 if isinstance(arg, Local):
                     instruction.args[i] = lookup_up(block, arg)
 
-def insert_phi(block, variable, prec, value):
-    if variable in block.depends:
-        if variable in block.phi:
-            block.phi[variable].args[prec] = value
-        else:
-            block.phi[variable] = Phi(block, {prec:value})
+# phi-node insertion can be understood as yet another definition.
+# therefore when inserting a phi-node, you need to trigger the
+# insertion for dominance frontiers of the current block.
+def insert_phi(block, variable):
+    if variable in block.depends and variable not in block.phi:
+        block.phi[variable] = Phi(block, {})
+        for frontier in block.frontiers:
+            insert_phi(frontier, variable)
 
 # lookup & lookup_up are guarranteed to return a value 
 # (and not a Local) once we have dominators figured out.

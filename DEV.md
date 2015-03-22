@@ -106,3 +106,27 @@ The environment brings up an one question. Optimally every spirthon program woul
 I realised if not trying to solve the problem now then solving it later could become unnecessarily hard. Also it's one of the fun problems in the project.
 
 The annotator needs to annotate constants too, so I put it to generate const -instructions for LOAD_CONST. It seems to neatly match the SPIR-V as well.
+
+Reviewing the discovery.py, I found out that my way to complete variables in phi-node insertion could cause an error in complex program flow. The error would appear in situations such as this:
+
+    x = 2
+    if a:
+        x = 3
+        if b:
+            pass
+        x = 10
+    return x
+
+The way the code checked the dominators, it would have assigned `x = 3` to phi -node instead of `x = 10`
+
+Additionally I found a possible problem with definition of function arguments.
+
+Third I found out a situation that happens at the code:
+
+    z = 5
+    while a:
+        if b:
+            z = 20
+    return z
+
+The appropriate phi-nodes were simply not inserted.
