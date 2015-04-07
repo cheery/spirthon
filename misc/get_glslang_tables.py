@@ -27,52 +27,54 @@ renamed_operands = {
     'Source': 'SourceLanguage',
     'Addressing': 'AddressingModel',
     'Memory': 'MemoryModel',
+    'Dimensionality': 'Dim',
     'Storage': 'StorageClass',
     'Loop': 'LoopControl',
     'Select': 'SelectionControl',
-    'Function': 'FunctionControlMask',
+    'Function': 'FunctionControl',
 }
-renamed_constant_tables = {
-    'MemorySemanticsMask': 'MemorySemantics',
-    'SelectControl': 'SelectionControl',
-}
-masked_constants = {'FunctionControlMask'}
 
 operands = defaultdict(list)
-for name, operand in re.findall(r"InstructionDesc\[(.+)\].*operands\.push\((.*)\);", doc_src):
+for name, operand in re.findall(r"InstructionDesc\[(.+)\].*operands\.push\((\w*)(?:,.*)?\);", doc_src):
     if operand.startswith('Operand'):      # Everything starts with an Operand
         operand = operand[len('Operand'):] # But it's not in the specification so lets clean it out.
     operands[name].append(renamed_operands.get(operand, operand))
-
-# Prefixes do not appear in the spec either, so I clear them out too.
-prefixes = (
-    r"^Cap|^Dim|^Lang|^Model|^Addressing|^MemoryAccess|^MemorySemantics|^Memory|^ExecutionScope|^Execution|^AccessQual|"
-    r"^Storage|^FuncParamAttr|^SamplerFilter|^FunctionControl|^SelectControl|^Dec|"
-    "^ProfilingInfo|^GroupOp|^FPFastMath|^Linkage|^FPRound|^LoopControl|^BuiltIn|^MemoryAccess|"
-    "^MemorySemantics|^EnqFlag|^SamplerAddressing")
 
 # In the SPIRV/spirv.h there are several useful constants and flags used by the engine.
 constants = {}
 masks = {}
 for name, body in re.findall(r"enum\W(\w+)\W\{(.*?)\}", spirv_src, re.DOTALL):
+    if name.endswith('_'):
+        continue # Spv.*_ seem to be duplicate of some tables.
+    if name.endswith('Shift'):
+        continue # Shift seem to be a duplicate of masks.
+                 # hm. It could be more useful than the masks..
+    if name.endswith('Mask'):
+        name = re.sub("Mask$", "", name)
+        to = masks
+    else:
+        to = constants
     table = {}
     index = 0
     for key, value in re.findall(r"^\s*(\w+)\s*(?:=\s*([0-9xA-Fa-f]+))?\s*\,?\s*(?://.*)?$", body, re.MULTILINE):
         if value != '':                     # Python and C literal syntax
             index = ast.literal_eval(value) # are similar enough.
-        key = re.sub(prefixes, "", key)
+        if name != 'Op': # The Op -prefix remains in the specification.
+            key = re.sub("^"+name, "", key) # But other prefixes do not.
+        if to == masks: # Also Masks do not have Mask -postfix.
+            key = re.sub("Mask$", "", key)
+            if key == 'MaskNone': # Isn't significant, and could be harmful to reader, so we can skip it.
+                assert index == 0, index # Assuming it's zero.
+                continue           
         assert key != '' # Substitutions might eliminate keys
         assert key not in table # If it appears again, something went wrong.
         table[key] = index # Allows ints to be ints in the json.
         index += 1 # enum increments if no constant is specified
-    if name == 'OpCode': # Merge the opcode constants with instruction table.
+    if name == 'Op': # Merge the opcode constants with instruction table.
         opcodes = table
     else:
-        name = renamed_constant_tables.get(name, name)
-        if name in masked_constants:
-            masks[name] = table
-        else:
-            constants[name] = table
+        #name = renamed_constant_tables.get(name, name)
+        to[name] = table
 
 # Finally lets put everything together for easy consumption and pretty-print it out.
 instructions = []
