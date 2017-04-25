@@ -1,5 +1,9 @@
 # Python to SPIR-V Compiler
 
+**Notice:** This library is outdated a lot. I advice you to get familiar with the machine readable specification in the [Khronos SPIR-V registry][spec], as well as read the official specification.
+
+ [spec]: https://www.khronos.org/registry/spir-v/
+
 Translation from python bytecode to SPIR-V.
 
 This might come out as something, or then not. It would be a shame to not try.
